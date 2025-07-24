@@ -1,0 +1,45 @@
+## Build results
+bin/
+obj/
+out/
+Generated_Code/
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## Secrets
+secrets.json
+*.env
+.env*
+
+## Logs
+*.log
+logs/
+
+## OS generated files
+.DS_Store
+Thumbs.db
+
+## NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+## Others
+*.db
+*.sqlite
+*.mdb
+
+# Auto-generated config files
+appsettings.Development.json
