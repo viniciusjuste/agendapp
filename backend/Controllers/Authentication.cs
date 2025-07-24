@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,13 @@ namespace MyApp.Namespace
         private readonly AppDbContext _context;
         private readonly ILogger<Authentication> _logger;
 
-        public Authentication(AppDbContext context, ILogger<Authentication> logger)
+        private readonly AuthService _authService;
+
+        public Authentication(AppDbContext context, ILogger<Authentication> logger, AuthService authService)
         {
             _context = context;
             _logger = logger;
+            _authService = authService;
         }
 
         /// <summary>
@@ -26,6 +30,7 @@ namespace MyApp.Namespace
         /// Checks if the user's email already exists. If not, hashes the password and creates a new user record in the database.
         /// In case of an error, logs the exception and returns a 500 status code.
         /// </remarks>
+        [Authorize]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegisterDto)
         {
@@ -58,6 +63,36 @@ namespace MyApp.Namespace
             {
                 _logger.LogError(ex, "An error occurred while registering the user.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while registering the user.");
+            }
+        }
+
+        /// <summary>
+        /// Authenticates a user and generates a JWT token.
+        /// </summary>
+        /// <param name="dto">Object containing the user's login credentials.</param>
+        /// <returns>An IActionResult containing the JWT token if authentication is successful, or an error message if unsuccessful.</returns>
+        /// <remarks>
+        /// Checks if the user exists and verifies the password. If valid, generates a JWT token.
+        /// Logs exceptions and returns a 500 status code in case of an error.
+        /// </remarks>
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto dto)
+        {
+            try
+            {
+                var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+                if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                    return Unauthorized("Invalid credentials.");
+
+                var token = _authService.GenerateJwtToken(user);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in for user {Email}.", dto.Email);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while logging in for user {dto.Email}.");
             }
         }
     }
