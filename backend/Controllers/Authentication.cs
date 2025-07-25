@@ -30,7 +30,6 @@ namespace MyApp.Namespace
         /// Checks if the user's email already exists. If not, hashes the password and creates a new user record in the database.
         /// In case of an error, logs the exception and returns a 500 status code.
         /// </remarks>
-        [Authorize]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegisterDto)
         {

@@ -44,7 +44,6 @@ builder.Services.AddSwaggerGen(options =>
         Title = "Appointments API",
         Version = "v1",
         Description = "Documentation of the API for appointment control",
-
         Contact = new OpenApiContact
         {
             Name = "Vinícius",
@@ -52,7 +51,31 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
-    // Include XML documentation comments if enabled in the .csproj
+    // Support for JWT authentication in Swagger
+    var jwtSecurityScheme = new OpenApiSecurityScheme
+    {
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Description = "Insira o token JWT no formato: Bearer {seu_token}",
+
+        Reference = new OpenApiReference
+        {
+            Id = JwtBearerDefaults.AuthenticationScheme,
+            Type = ReferenceType.SecurityScheme
+        }
+    };
+
+    options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        { jwtSecurityScheme, Array.Empty<string>() }
+    });
+
+    // Include XML documentation (se configurado no .csproj)
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
