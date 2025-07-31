@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 /// <summary>
 /// Represents a service provided by the barbershop
 /// </summary>
@@ -11,11 +13,13 @@ public class Service
     /// <summary>
     /// Name of the service
     /// </summary>
+    [Required(ErrorMessage = "Name is required")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Duration of the service in minutes
     /// </summary>
+    [Required(ErrorMessage = "Duration is required")]
     public string DurationMinutes { get; set; } = string.Empty;
 
     /// <summary>
@@ -26,6 +30,7 @@ public class Service
     /// <summary>
     /// Price of the service (optional)
     /// </summary>
+    [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
     public decimal? Price { get; set; }
 }
 
