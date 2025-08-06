@@ -1,18 +1,19 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class Services : ControllerBase
+    public class ServicesController : ControllerBase
     {
         private readonly AppDbContext _context;
         private readonly ILogger<Authentication> _logger;
 
         private readonly AuthService _authService;
 
-        public Services(AppDbContext context, ILogger<Authentication> logger, AuthService authService)
+        public ServicesController(AppDbContext context, ILogger<Authentication> logger, AuthService authService)
         {
             _context = context;
             _logger = logger;
@@ -29,7 +30,7 @@ namespace MyApp.Namespace
         /// Logs errors in case of exceptions and returns a 500 status code.
         /// </remarks>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Service serviceModel)
+        public async Task<IActionResult> CreateService([FromBody] Service serviceModel)
         {
             if (serviceModel == null)
             {
@@ -62,5 +63,33 @@ namespace MyApp.Namespace
                 return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Retrieves a list of all services in the system.
+        /// </summary>
+        /// <returns>An IActionResult containing a list of services if successful, or an error message if unsuccessful.</returns>
+        /// <remarks>
+        /// Queries the database for all records in the Services table and returns them as a list.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
+        [HttpGet]
+        public async Task<IActionResult> GetServices()
+        {
+            try
+            {
+                var services = await _context.Services.ToListAsync();
+
+                if (services == null || !services.Any())
+                    return NoContent();
+
+                return Ok(services);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving services.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
+            }
+        }
+        
     }
 }
