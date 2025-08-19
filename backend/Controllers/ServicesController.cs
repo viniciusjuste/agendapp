@@ -90,6 +90,59 @@ namespace MyApp.Namespace
                 return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
             }
         }
-        
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateService(int id, [FromBody] ServiceDto serviceDto)
+        {
+            if (serviceDto == null)
+            {
+                _logger.LogWarning("Received null service model.");
+                return BadRequest("Service model cannot be null");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid service model received.");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var service = await _context.Services.FindAsync(id);
+
+                if (service == null)
+                {
+                    _logger.LogWarning("Service with ID {ServiceId} not found.", id);
+                    return NotFound($"Service with ID {id} not found.");
+                }
+
+                if (!string.IsNullOrEmpty(serviceDto.Name))
+                    service.Name = serviceDto.Name;
+
+                if (serviceDto.DurationMinutes.HasValue)
+                    service.DurationMinutes = serviceDto.DurationMinutes.Value;
+
+                if (!string.IsNullOrEmpty(serviceDto.Description))
+                    service.Description = serviceDto.Description;
+
+                if (serviceDto.Price.HasValue)
+                    service.Price = serviceDto.Price.Value;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Service updated successfully with ID: {ServiceId}", id);
+
+                return Ok(new
+                {
+                    message = "Service updated successfully",
+                    id = id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating a service.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
+            }
+        }
     }
 }
