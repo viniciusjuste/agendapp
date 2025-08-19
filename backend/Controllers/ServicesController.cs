@@ -91,6 +91,16 @@ namespace MyApp.Namespace
             }
         }
 
+        /// <summary>
+        /// Updates an existing service in the system.
+        /// </summary>
+        /// <param name="id">The ID of the service to be updated.</param>
+        /// <param name="serviceDto">The service model containing the updated details of the service.</param>
+        /// <returns>An IActionResult indicating the result of the update operation, including success or error messages.</returns>
+        /// <remarks>
+        /// Validates the input service model and updates the existing service in the database if valid. Logs warnings for null or invalid models.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateService(int id, [FromBody] ServiceDto serviceDto)
         {
@@ -150,4 +160,5 @@ namespace MyApp.Namespace
             }
         }
     }
+
 }
