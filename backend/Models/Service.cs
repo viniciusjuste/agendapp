@@ -20,7 +20,7 @@ public class Service
     /// Duration of the service in minutes
     /// </summary>
     [Required(ErrorMessage = "Duration is required")]
-    public string DurationMinutes { get; set; } = string.Empty;
+    public int DurationMinutes { get; set; }
 
     /// <summary>
     /// Description of the service (optional)
