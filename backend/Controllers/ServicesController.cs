@@ -126,7 +126,12 @@ namespace MyApp.Namespace
                     service.Description = serviceDto.Description;
 
                 if (serviceDto.Price.HasValue)
+                {
+                    if (serviceDto.Price.Value < 0.01m)
+                        return BadRequest("Price must be greater than 0");
+
                     service.Price = serviceDto.Price.Value;
+                }
 
                 await _context.SaveChangesAsync();
 
