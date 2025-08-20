@@ -159,6 +159,47 @@ namespace MyApp.Namespace
                 return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
             }
         }
-    }
 
+        /// <summary>
+        /// Deletes a service from the system.
+        /// </summary>
+        /// <param name="id">The ID of the service to delete.</param>
+        /// <returns>An IActionResult indicating the result of the deletion operation, including success or error messages.</returns>
+        /// <remarks>
+        /// Retrieves the service with the specified ID and removes it from the database.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteService(int id)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(id);
+
+                if (service == null)
+                {
+                    _logger.LogWarning("Service with ID {ServiceId} not found.", id);
+                    return NotFound($"Service with ID {id} not found.");
+                }
+
+                _context.Services.Remove(service);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Service deleted successfully with ID: {ServiceId}", id);
+
+                return Ok(new
+                {
+                    message = "Service deleted successfully",
+                    id = id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting a service.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
+            }
+        }
+    }
 }
+
+
