@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<BlockedSchedule> BlockedSchedules { get; set; }
+    public DbSet<WorkingHours> WorkingHours { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
