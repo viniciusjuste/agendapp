@@ -100,6 +100,28 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Seed default working hours
+using (var scope = app.Services.CreateScope())
+{
+    var _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (!_db.WorkingHours.Any())
+    {
+        var defaultSchedule = Enum.GetValues<DayOfWeek>()
+            .Where(d => d != DayOfWeek.Sunday) // Ignora domingo
+            .Select(d => new WorkingHours
+            {
+                Day = d,
+                Start = new TimeSpan(9, 0, 0),
+                End = d == DayOfWeek.Saturday ? new TimeSpan(14, 0, 0) : new TimeSpan(18, 0, 0)
+            })
+            .ToList();
+
+        _db.WorkingHours.AddRange(defaultSchedule);
+        _db.SaveChanges();
+    }
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
