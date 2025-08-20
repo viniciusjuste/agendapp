@@ -92,6 +92,38 @@ namespace MyApp.Namespace
         }
 
         /// <summary>
+        /// Retrieves a specific service in the system by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the service to retrieve.</param>
+        /// <returns>An IActionResult containing the service if found, or an error message if not found or if an error occurred.</returns>
+        /// <remarks>
+        /// Queries the database for a service with the specified ID and returns it as a Service model.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetService(int id)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(id);
+
+                if (service == null)
+                {
+                    _logger.LogWarning("Service with ID {ServiceId} not found.", id);
+                    return NotFound($"Service with ID {id} not found.");
+                }
+
+                return Ok(service);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving a service.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
+
+            }
+        }
+
+        /// <summary>
         /// Updates an existing service in the system.
         /// </summary>
         /// <param name="id">The ID of the service to be updated.</param>
