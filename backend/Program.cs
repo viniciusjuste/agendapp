@@ -36,6 +36,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<WorkingHoursService>();
+
 
 // Database configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
