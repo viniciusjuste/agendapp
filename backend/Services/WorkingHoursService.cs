@@ -68,4 +68,21 @@ public class WorkingHoursService
         }
         return slots;
     }
+
+    /// <summary>
+    /// Retrieves a specific appointment by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the appointment to retrieve.</param>
+    /// <returns>An <see cref="Appointment"/> object containing the appointment if found, or null if not found.</returns>
+    /// <remarks>
+    /// Queries the database for an appointment with the specified ID and returns it as an <see cref="Appointment"/> model.
+    /// Includes the service and user related to the appointment.
+    /// </remarks>
+    public async Task<Appointment?> GetAppointmentByIdAsync(int id)
+    {
+        return await _context.Appointments
+            .Include(a => a.Service)
+            .Include(a => a.User)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
 }
