@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -73,6 +74,7 @@ namespace MyApp.Namespace
         /// Validates the input appointment model and adds it to the database if valid. Logs warnings for null or invalid models.
         /// Logs errors in case of exceptions and returns a 500 status code.
         /// </remarks>
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto dto)
         {
@@ -105,8 +107,21 @@ namespace MyApp.Namespace
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAppointmentById), new { id = appointment.Id }, appointment);
-        }
+            var user = await _context.Users.FindAsync(userId);
 
+            var response = new AppointmentResponseDto
+            {
+                Id = appointment.Id,
+                UserId = appointment.UserId,
+                UserName = user?.Name,  
+                ServiceId = appointment.ServiceId,
+                ServiceName = service.Name,
+                AppointmentDate = appointment.AppointmentDate,
+                Status = appointment.Status.ToString(),
+                Notes = appointment.Notes
+            };
+
+            return CreatedAtAction(nameof(GetAppointmentById), new { id = appointment.Id }, response);
+        }
     }
 }
