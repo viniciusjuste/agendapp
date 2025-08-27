@@ -14,5 +14,5 @@ public class CreateAppointmentDto
     /// <summary>
     /// Any additional notes or comments about the appointment
     /// </summary>
-    public string Notes { get; set; } = string.Empty;
+    public string? Notes { get; set; } = string.Empty;
 }
