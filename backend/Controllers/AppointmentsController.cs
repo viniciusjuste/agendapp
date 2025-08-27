@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,5 +42,68 @@ namespace MyApp.Namespace
 
             return Ok(formattedSlots);
         }
+
+        /// <summary>
+        /// Retrieves a specific appointment by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the appointment to retrieve.</param>
+        /// <returns>An IActionResult containing the appointment if found, or an error message if not found or if an error occurred.</returns>
+        /// <remarks>
+        /// Queries the database for an appointment with the specified ID and returns it as an Appointment model.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAppointmentById(int id)
+        {
+            var appointment = await _workingHoursService.GetAppointmentByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound("Appointment not found.");
+            }
+            return Ok(appointment);
+        }
+
+        /// <summary>
+        /// Creates a new appointment in the system.
+        /// </summary>
+        /// <param name="appointment">The appointment model containing the details of the appointment to be created.</param>
+        /// <returns>An IActionResult containing the created appointment if successful, or an error message if not successful.</returns>
+        /// <remarks>
+        /// Validates the input appointment model and adds it to the database if valid. Logs warnings for null or invalid models.
+        /// Logs errors in case of exceptions and returns a 500 status code.
+        /// </remarks>
+        [HttpPost]
+        public async Task<IActionResult> CreateAppointment([FromBody] Appointment appointment)
+        {
+            if (appointment.AppointmentDate <= DateTime.Now)
+            {
+                return BadRequest("Appointment date must be in the future.");
+            }
+
+            var user = await _context.Users.FindAsync(appointment.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var service = await _context.Services.FindAsync(appointment.ServiceId);
+            if (service == null)
+            {
+                return NotFound("Service not found.");
+            }
+
+            var availableSlots = _workingHoursService.GetAvailableSlots(appointment.AppointmentDate.Date, appointment.ServiceId);
+
+            if (!availableSlots.Any(a => a.TimeOfDay == appointment.AppointmentDate.TimeOfDay))
+            {
+                return BadRequest("The selected time slot is not available.");
+            }
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetAppointmentById), new { id = appointment.Id }, appointment);
+        }
+
     }
 }
