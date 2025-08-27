@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,38 +67,40 @@ namespace MyApp.Namespace
         /// <summary>
         /// Creates a new appointment in the system.
         /// </summary>
-        /// <param name="appointment">The appointment model containing the details of the appointment to be created.</param>
-        /// <returns>An IActionResult containing the created appointment if successful, or an error message if not successful.</returns>
+        /// <param name="dto">The appointment model containing the details of the appointment to be created.</param>
+        /// <returns>An IActionResult indicating the result of the creation operation, including success or error messages.</returns>
         /// <remarks>
         /// Validates the input appointment model and adds it to the database if valid. Logs warnings for null or invalid models.
         /// Logs errors in case of exceptions and returns a 500 status code.
         /// </remarks>
         [HttpPost]
-        public async Task<IActionResult> CreateAppointment([FromBody] Appointment appointment)
+        public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto dto)
         {
-            if (appointment.AppointmentDate <= DateTime.Now)
-            {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User not logged in.");
+
+            int userId = int.Parse(userIdClaim);
+
+            if (dto.AppointmentDate <= DateTime.Now)
                 return BadRequest("Appointment date must be in the future.");
-            }
 
-            var user = await _context.Users.FindAsync(appointment.UserId);
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            var service = await _context.Services.FindAsync(appointment.ServiceId);
+            var service = await _context.Services.FindAsync(dto.ServiceId);
             if (service == null)
-            {
                 return NotFound("Service not found.");
-            }
 
-            var availableSlots = _workingHoursService.GetAvailableSlots(appointment.AppointmentDate.Date, appointment.ServiceId);
-
-            if (!availableSlots.Any(a => a.TimeOfDay == appointment.AppointmentDate.TimeOfDay))
-            {
+            var availableSlots = _workingHoursService.GetAvailableSlots(dto.AppointmentDate.Date, dto.ServiceId);
+            if (!availableSlots.Any(s => s.TimeOfDay == dto.AppointmentDate.TimeOfDay))
                 return BadRequest("The selected time slot is not available.");
-            }
+
+            var appointment = new Appointment
+            {
+                UserId = userId,
+                ServiceId = dto.ServiceId,
+                AppointmentDate = dto.AppointmentDate,
+                Notes = dto.Notes,
+                Status = AppointmentStatus.Pending
+            };
 
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
